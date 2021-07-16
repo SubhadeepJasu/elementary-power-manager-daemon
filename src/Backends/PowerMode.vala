@@ -47,7 +47,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                 set_power_saving_mode.begin(true);
                 break;
                 case 1:
-                set_start_mode.begin();
+                set_smart_mode.begin();
                 break;
                 case 2:
                 smart = false;
@@ -62,7 +62,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             set_power_saving_mode.begin(true);
             break;
             case 1:
-            set_start_mode.begin();
+            set_smart_mode.begin();
             break;
             case 2:
             smart = false;
@@ -81,7 +81,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
         }
     }
 
-    private async void set_start_mode () {
+    private async void set_smart_mode () {
         if (!smart) {
             smart = true;
             new Thread<int> ("battery_monitor", battery_monitor);
