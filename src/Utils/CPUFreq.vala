@@ -81,9 +81,13 @@ public class PowerManagerDaemon.Utils.CPUFreq {
                 print ("Setting %s mode for CPU %u\n", mode_string, i);
                 //  var governor_file = File.new_for_path ("/sys/devices/system/cpu/cpu" + i.to_string () + "/cpufreq/scaling_governor");
                 var ds = FileStream.open ("/sys/devices/system/cpu/cpu" + i.to_string () + "/cpufreq/scaling_governor", "r+");
-                string line = ds.read_line ();
-                if (!line.contains (mode_string)) {
-                    ds.puts (mode_string + "\n");
+                if (ds != null) {
+                    string line = ds.read_line ();
+                    if (!line.contains (mode_string)) {
+                        ds.puts (mode_string + "\n");
+                    }
+                } else {
+                    error ("Fatal: Cannot edit CPU governor, access is denied");
                 }
                 print ("Done!\n");
             }

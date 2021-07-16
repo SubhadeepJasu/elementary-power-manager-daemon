@@ -36,9 +36,6 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
 
     construct {
         power_mode_settings = new GLib.Settings ("io.elementary.power-manager-daemon.powermode");
-        if (power_mode_settings == null) {
-            error ("FATAL: Cannot connect to settings");
-        }
         core_count = Utils.CPUFreq.get_core_count ();
         available_cpu_governors = Utils.CPUFreq.get_available_governors ();
         //  print ("%s, %s, %s\n", available_cpu_governors[0], available_cpu_governors[1], available_cpu_governors[2]);
@@ -50,7 +47,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                 set_power_saving_mode.begin(true);
                 break;
                 case 1:
-                smart_set_mode.begin();
+                set_start_mode.begin();
                 break;
                 case 2:
                 smart = false;
@@ -65,7 +62,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             set_power_saving_mode.begin(true);
             break;
             case 1:
-            smart_set_mode.begin();
+            set_start_mode.begin();
             break;
             case 2:
             smart = false;
@@ -76,15 +73,15 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
 
     private async void set_power_saving_mode (bool mode) {
         if (mode) {
-            print ("Power saving mode manually on\n");
+            print ("Power Saving mode turned on\n");
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
         } else {
-            print ("Performance mode manually on\n");
+            print ("High Performance mode turned on\n");
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[0], core_count);
         }
     }
 
-    private async void smart_set_mode () {
+    private async void set_start_mode () {
         if (!smart) {
             smart = true;
             new Thread<int> ("battery_monitor", battery_monitor);
