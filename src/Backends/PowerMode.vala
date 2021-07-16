@@ -44,14 +44,14 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             switch (power_mode_settings.get_int ("power-mode")) {
                 case 0:
                 smart = false;
-                set_power_saving_mode.begin(true);
+                set_power_saving_mode.begin (true);
                 break;
                 case 1:
-                set_smart_mode.begin();
+                set_smart_mode.begin ();
                 break;
                 case 2:
                 smart = false;
-                set_power_saving_mode.begin(false);
+                set_power_saving_mode.begin (false);
                 break;
             }
         });
@@ -59,14 +59,14 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
         switch (power_mode_settings.get_int ("power-mode")) {
             case 0:
             smart = false;
-            set_power_saving_mode.begin(true);
+            set_power_saving_mode.begin (true);
             break;
             case 1:
-            set_smart_mode.begin();
+            set_smart_mode.begin ();
             break;
             case 2:
             smart = false;
-            set_power_saving_mode.begin(false);
+            set_power_saving_mode.begin (false);
             break;
         }
     }
