@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+    <schema path="/io/elementary/power-manager-daemon/powermode/" id="io.elementary.power-manager-daemon.powermode">
+        <key type="i" name="power-mode">
+        <default>0</default>
+        <summary>Laptop Power Management mode</summary>
+        <description></description>
+        </key>
+    </schema>
+</schemalist>
