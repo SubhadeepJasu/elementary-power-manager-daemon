@@ -4,7 +4,10 @@
 #     rename: meson.project_name() + '.desktop'
 # )
 
-
+install_data(
+    'io.elementary.power-manager-daemon.service',
+    install_dir: '/etc/systemd/system'
+)
 
 dbus_dep = dependency('dbus-1')
 dbus_interfaces_dir = dbus_dep.get_pkgconfig_variable('interfaces_dir', define_variable: ['datadir', datadir])

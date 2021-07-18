@@ -81,7 +81,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                 break;
             }
             Thread.yield ();
-            Thread.usleep (50000000);
+            Thread.usleep (30000000);
         }
         return 0;
     }

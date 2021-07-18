@@ -1,0 +1,13 @@
+[Unit]
+Description=Manages device power modes
+
+[Service]
+ExecStart=io.elementary.power-manager-daemon
+Restart=on-failure
+RestartSec=5s
+StartLimitIntervalSec=500
+StartLimitBurst=5
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
