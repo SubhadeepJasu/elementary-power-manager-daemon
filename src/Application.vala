@@ -51,7 +51,7 @@ public class PowerManagerDaemon.Application : GLib.Application {
     }
 
     public override void activate () {
-        register_with_session_manager.begin ();
+        //  register_with_session_manager.begin ();
         //  setup_accountsservice.begin ();
 
         hold ();

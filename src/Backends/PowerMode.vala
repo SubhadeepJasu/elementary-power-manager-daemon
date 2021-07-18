@@ -27,9 +27,9 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
     private GLib.Settings power_mode_settings;
     private string[] available_cpu_governors;
     private uint core_count;
+    bool monitoring;
 
     // Used for automatic mode
-    private bool smart;
     private bool power_source_connected;
     private uint battery_level;
     private uint cpu_load;
@@ -38,37 +38,52 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
         power_mode_settings = new GLib.Settings ("io.elementary.power-manager-daemon.powermode");
         core_count = Utils.CPUFreq.get_core_count ();
         available_cpu_governors = Utils.CPUFreq.get_available_governors ();
-        //  print ("%s, %s, %s\n", available_cpu_governors[0], available_cpu_governors[1], available_cpu_governors[2]);
+        start_monitoring.begin ();
+    }
 
-        power_mode_settings.changed.connect (() => {
-            switch (power_mode_settings.get_int ("power-mode")) {
+    private async void start_monitoring () {
+        if (!monitoring) {
+            monitoring = true;
+            new Thread<int> ("settings_monitor", settings_monitor);
+        }
+    }
+    private int settings_monitor () {
+        while (monitoring) {
+            print ("Monitoring...\n");
+            string user_string;
+            string user = "";
+            string settings_string = "0";
+            int settings = 0;
+            try {
+                Process.spawn_command_line_sync ("who", out user_string);
+                var regex = new Regex ("(.*) tty7");
+                MatchInfo match_info;
+
+                if (regex.match (user_string, 0, out match_info)) {
+                    user = match_info.fetch (1);
+                }
+                if (user != "" && user != "root") {
+                    Process.spawn_command_line_sync ("sudo -u " + user + " gsettings get io.elementary.power-manager-daemon.powermode power-mode", out settings_string);
+                }
+                settings = int.parse (settings_string);
+            } catch (Error e) {
+                warning (e.message);
+            }
+
+            switch (settings) {
                 case 0:
-                smart = false;
                 set_power_saving_mode.begin (true);
                 break;
                 case 1:
-                set_smart_mode.begin ();
                 break;
                 case 2:
-                smart = false;
                 set_power_saving_mode.begin (false);
                 break;
             }
-        });
-
-        switch (power_mode_settings.get_int ("power-mode")) {
-            case 0:
-            smart = false;
-            set_power_saving_mode.begin (true);
-            break;
-            case 1:
-            set_smart_mode.begin ();
-            break;
-            case 2:
-            smart = false;
-            set_power_saving_mode.begin (false);
-            break;
+            Thread.yield ();
+            Thread.usleep (50000000);
         }
+        return 0;
     }
 
     private async void set_power_saving_mode (bool mode) {
@@ -79,21 +94,5 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             print ("High Performance mode turned on\n");
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[0], core_count);
         }
-    }
-
-    private async void set_smart_mode () {
-        if (!smart) {
-            smart = true;
-            new Thread<int> ("battery_monitor", battery_monitor);
-        }
-    }
-
-    private int battery_monitor () {
-        while (smart) {
-            print ("Monitoring...\n");
-            Thread.yield ();
-            Thread.usleep (2000000);
-        }
-        return 0;
     }
 }
