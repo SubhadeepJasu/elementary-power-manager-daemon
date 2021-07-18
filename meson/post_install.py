@@ -16,3 +16,6 @@ if 'DESTDIR' not in os.environ:
 
 	print('Updating desktop database...')
 	subprocess.call(['update-desktop-database', '-q', os.path.join(datadir, 'applications')])
+
+print('Configuring power manager service to start automatically...')
+subprocess.run(['systemctl', 'enable', 'io.elementary.power-manager-daemon'])
