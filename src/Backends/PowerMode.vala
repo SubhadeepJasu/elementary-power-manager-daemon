@@ -30,11 +30,9 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
     bool monitoring;
 
     // Used for automatic mode
-    private bool power_source_connected;
     private int battery_level;
     private uint battery_status;
     private bool battery_present;
-    private float powersave_cpu_load_threshold;
 
     construct {
         power_mode_settings = new GLib.Settings ("io.elementary.power-manager-daemon.powermode");
@@ -116,7 +114,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
         Utils.CPUFreq.set_cpu_governor (available_cpu_governors[0], core_count);
 
         if (cpu_load > cpu_performance_threshold) {
-            debug ("High system load, Performance mode: ON");
+            debug ("High system load, High Performance mode: ON");
             debug ("Suggesting Turbo: ON");
             Utils.CPUFreq.set_turbo (true);
         } else {
