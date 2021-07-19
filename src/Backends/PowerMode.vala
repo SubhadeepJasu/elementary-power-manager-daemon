@@ -90,12 +90,19 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
     private async void set_power_saving_mode (bool on_demand_preference, bool turbo_preference) {
         float cpu_load = Utils.CPUFreq.get_cpu_load ();
         float cpu_powersave_threshold = Utils.CPUFreq.powersave_cpu_load_threshold;
-        if (turbo_preference && cpu_load > cpu_powersave_threshold) {
-            Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
-            debug ("High system load, Power Saving mode: ON");
-            debug ("Suggesting Turbo: ON");
-            Utils.CPUFreq.set_turbo (true);
-        } else if (on_demand_preference && cpu_load > cpu_powersave_threshold && available_cpu_governors[1] != null) {
+        if (turbo_preference && on_demand_preference && cpu_load > cpu_powersave_threshold) {
+            if (available_cpu_governors[1] != null) {
+                debug ("High system load, On Demand mode: ON");
+                Utils.CPUFreq.set_cpu_governor (available_cpu_governors[1], core_count);
+                debug ("Suggesting Turbo: ON");
+                Utils.CPUFreq.set_turbo (true);
+            } else {
+                Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
+                debug ("High system load, Power Saving mode: ON");
+                debug ("Suggesting Turbo: ON");
+                Utils.CPUFreq.set_turbo (true);
+            }
+        } else if (turbo_preference && cpu_load > cpu_powersave_threshold) {
             debug ("High system load, On Demand mode: ON");
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[1], core_count);
             debug ("Suggesting Turbo: OFF");
@@ -136,7 +143,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                     if (battery_level >= 80) {
                         set_power_saving_mode.begin (true, true);
                     } else if (battery_level >= 50) {
-                        set_power_saving_mode.begin (true, false);
+                        set_power_saving_mode.begin (false, true);
                     } else {
                         set_power_saving_mode.begin (false, false);
                     }
