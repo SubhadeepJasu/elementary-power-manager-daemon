@@ -31,13 +31,16 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
 
     // Used for automatic mode
     private bool power_source_connected;
-    private uint battery_level;
-    private uint cpu_load;
+    private int battery_level;
+    private uint battery_status;
+    private bool battery_present;
+    private float powersave_cpu_load_threshold;
 
     construct {
         power_mode_settings = new GLib.Settings ("io.elementary.power-manager-daemon.powermode");
         core_count = Utils.CPUFreq.get_core_count ();
         available_cpu_governors = Utils.CPUFreq.get_available_governors ();
+        battery_present = Utils.Battery.get_battery_present_by_index (0);
         start_monitoring.begin ();
     }
 
@@ -49,7 +52,6 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
     }
     private int settings_monitor () {
         while (monitoring) {
-            print ("Monitoring...\n");
             string user_string;
             string user = "";
             string settings_string = "0";
@@ -72,12 +74,13 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
 
             switch (settings) {
                 case 0:
-                set_power_saving_mode.begin (true);
+                set_power_saving_mode.begin (false, false);
                 break;
                 case 1:
+                set_automatic_mode.begin ();
                 break;
                 case 2:
-                set_power_saving_mode.begin (false);
+                set_performance_mode.begin ();
                 break;
             }
             Thread.yield ();
@@ -86,13 +89,78 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
         return 0;
     }
 
-    private async void set_power_saving_mode (bool mode) {
-        if (mode) {
-            print ("Power Saving mode turned on\n");
+    private async void set_power_saving_mode (bool on_demand_preference, bool turbo_preference) {
+        float cpu_load = Utils.CPUFreq.get_cpu_load ();
+        float cpu_powersave_threshold = Utils.CPUFreq.powersave_cpu_load_threshold;
+        if (turbo_preference && cpu_load > cpu_powersave_threshold) {
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
+            debug ("High system load, Power Saving mode: ON");
+            debug ("Suggesting Turbo: ON");
+            Utils.CPUFreq.set_turbo (true);
+        } else if (on_demand_preference && cpu_load > cpu_powersave_threshold && available_cpu_governors[1] != null) {
+            debug ("High system load, On Demand mode: ON");
+            Utils.CPUFreq.set_cpu_governor (available_cpu_governors[1], core_count);
+            debug ("Suggesting Turbo: OFF");
+            Utils.CPUFreq.set_turbo (false);
         } else {
-            print ("High Performance mode turned on\n");
-            Utils.CPUFreq.set_cpu_governor (available_cpu_governors[0], core_count);
+            debug ("Power Saving mode turned: ON");
+            Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
+            debug ("Suggesting Turbo: OFF");
+            Utils.CPUFreq.set_turbo (false);
+        }
+    }
+
+    private async void set_performance_mode () {
+        float cpu_load = Utils.CPUFreq.get_cpu_load ();
+        float cpu_performance_threshold = Utils.CPUFreq.performance_cpu_load_threshold;
+        Utils.CPUFreq.set_cpu_governor (available_cpu_governors[0], core_count);
+
+        if (cpu_load > cpu_performance_threshold) {
+            debug ("High system load, Performance mode: ON");
+            debug ("Suggesting Turbo: ON");
+            Utils.CPUFreq.set_turbo (true);
+        } else {
+            debug ("High Performance mode: ON");
+            debug ("Suggesting Turbo: OFF");
+            Utils.CPUFreq.set_turbo (false);
+        }
+    }
+
+    private async void set_automatic_mode () {
+        debug ("Automatic mode: ON");
+        if (battery_present) {
+            battery_level = Utils.Battery.get_battery_percentage_by_index (0);
+            battery_status = Utils.Battery.get_battery_status_by_index (0);
+            
+            if (battery_status != -1 && battery_level != -1) {
+                switch (battery_status) {
+                    case 0:
+                    if (battery_level >= 80) {
+                        set_power_saving_mode.begin (true, true);
+                    } else if (battery_level >= 50) {
+                        set_power_saving_mode.begin (true, false);
+                    } else {
+                        set_power_saving_mode.begin (false, false);
+                    }
+                    break;
+                    case 1:
+                    if (battery_level >= 50) {
+                        set_performance_mode.begin ();
+                    } else if (battery_level >= 20) {
+                        set_power_saving_mode.begin (true, true);
+                    } else {
+                        set_power_saving_mode.begin (false, false);
+                    }
+                    break;
+                    case 2:
+                    set_performance_mode.begin ();
+                    break;
+                }
+            } else {
+                set_power_saving_mode.begin (true, true);
+            }
+        } else {
+            set_performance_mode.begin ();
         }
     }
 }

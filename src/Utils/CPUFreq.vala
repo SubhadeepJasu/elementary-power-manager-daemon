@@ -21,9 +21,19 @@
 */
 
 public class PowerManagerDaemon.Utils.CPUFreq {
+    private const string CPU_INFO_FILE = "/proc/cpuinfo";
+    private const string CPU_LOCATION = "/sys/devices/system/cpu";
+    private const string CPU_LOAD_AVG = "/proc/loadavg";
+    private const string INTEL_P_STATE = "/sys/devices/system/cpu/intel_pstate/no_turbo";
+    private const string CPUFREQ_BOOST = "/sys/devices/system/cpu/cpufreq/boost";
+
+    /* Code taken from auto-cpufreq */
+    public static float powersave_cpu_load_threshold = 1.4f;
+    public static float performance_cpu_load_threshold = 1.0f;
+
     /* Code taken from com.github.hannesschulze.optimizer */
     public static uint get_core_count () {
-        var cpu_file = File.new_for_path ("/proc/cpuinfo");
+        var cpu_file = File.new_for_path (CPU_INFO_FILE);
         uint cores = 0U;
         try {
             var dis = new DataInputStream (cpu_file.read ());
@@ -36,14 +46,15 @@ public class PowerManagerDaemon.Utils.CPUFreq {
         } catch (Error e) {
             warning (e.message);
         }
-
+        powersave_cpu_load_threshold = (70.0f * (float)cores) / 100.0f;
+        performance_cpu_load_threshold = (50.0f * (float)cores) / 100.0f;
         return cores;
     }
 
     public static string[] get_available_governors () {
         string[] available_governors = new string[3];
-        if (GLib.FileUtils.test("/sys/devices/system/cpu/cpu0/cpufreq/", GLib.FileTest.IS_DIR)) {
-            var scaling_file = File.new_for_path ("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors");
+        if (GLib.FileUtils.test(CPU_LOCATION + "/cpu0/cpufreq/", GLib.FileTest.IS_DIR)) {
+            var scaling_file = File.new_for_path (CPU_LOCATION + "/cpu0/cpufreq/scaling_available_governors");
             try {
                 var dis = new DataInputStream (scaling_file.read ());
                 string line = dis.read_line ();
@@ -76,23 +87,47 @@ public class PowerManagerDaemon.Utils.CPUFreq {
     }
 
     public static void set_cpu_governor (string mode_string, uint core_count) {
-        try {
-            for (int i = 0; i < core_count; i++) {
-                print ("Setting %s mode for CPU %u\n", mode_string, i);
-                //  var governor_file = File.new_for_path ("/sys/devices/system/cpu/cpu" + i.to_string () + "/cpufreq/scaling_governor");
-                var ds = FileStream.open ("/sys/devices/system/cpu/cpu" + i.to_string () + "/cpufreq/scaling_governor", "r+");
-                if (ds != null) {
-                    string line = ds.read_line ();
-                    if (!line.contains (mode_string)) {
-                        ds.puts (mode_string + "\n");
-                    }
-                } else {
-                    error ("Fatal: Cannot edit CPU governor, access is denied");
+        for (int i = 0; i < core_count; i++) {
+            debug ("Setting %s mode for CPU %u", mode_string, i);
+            var ds = FileStream.open ("/sys/devices/system/cpu/cpu" + i.to_string () + "/cpufreq/scaling_governor", "r+");
+            if (ds != null) {
+                string line = ds.read_line ();
+                if (!line.contains (mode_string)) {
+                    ds.puts (mode_string + "\n");
                 }
-                print ("Done!\n");
+            } else {
+                error ("Fatal: Cannot edit CPU governor, access is denied");
             }
+        }
+    }
+
+    public static float get_cpu_load () {
+        var load_file = File.new_for_path (CPU_LOAD_AVG);
+        try {
+            var dis = new DataInputStream (load_file.read ());
+            var line = dis.read_line ();
+            var sections = line.split (" ");
+            return float.parse (sections[0]);
         } catch (Error e) {
-            warning ("CPU Governor change failed: %s", e.message);
+            warning (e.message);
+        }
+
+        return -1.0f;
+    }
+
+    public static void set_turbo (bool turbo_on) {
+        FileStream turbo_descriptor = null;
+
+        if (GLib.FileUtils.test(INTEL_P_STATE, GLib.FileTest.EXISTS)) {
+            turbo_descriptor = FileStream.open (INTEL_P_STATE, "r+");
+        } else if (GLib.FileUtils.test(CPUFREQ_BOOST, GLib.FileTest.EXISTS)) {
+            turbo_descriptor = FileStream.open (CPUFREQ_BOOST, "r+");
+        } else {
+            debug ("CPU Turbo not available");
+        }
+        
+        if (turbo_descriptor != null) {
+            turbo_descriptor.puts (turbo_on ? "1\n" : "0\n");
         }
     }
 }
