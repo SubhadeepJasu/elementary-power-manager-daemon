@@ -1,5 +1,5 @@
 /*
-* Copyright 2020 elementary, Inc. (https://elementary.io)
+* Copyright 2021 elementary, Inc. (https://elementary.io)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -29,8 +29,6 @@ public class PowerManagerDaemon.Application : GLib.Application {
 
     private Application () {}
 
-    //  private SessionClient? session_client;
-
     private Backends.PowerMode power_mode;
 
     construct {
@@ -51,35 +49,8 @@ public class PowerManagerDaemon.Application : GLib.Application {
     }
 
     public override void activate () {
-        //  register_with_session_manager.begin ();
-        //  setup_accountsservice.begin ();
-
         hold ();
     }
-
-    //  private async bool register_with_session_manager () {
-    //      session_client = yield register_with_session (Build.PROJECT_NAME);
-
-    //      session_client.query_end_session.connect (() => end_session (false));
-    //      session_client.end_session.connect (() => end_session (false));
-    //      session_client.stop.connect (() => end_session (true));
-
-    //      return true;
-    //  }
-
-    //  void end_session (bool quit) {
-    //      if (quit) {
-    //          this.quit ();
-    //          release ();
-    //          return;
-    //      }
-
-    //      try {
-    //          session_client.end_session_response (true, "");
-    //      } catch (Error e) {
-    //          warning ("Unable to respond to session manager: %s", e.message);
-    //      }
-    //  }
 
     public static int main (string[] args) {
         var application = new Application ();

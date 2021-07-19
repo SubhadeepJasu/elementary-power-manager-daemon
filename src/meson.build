@@ -10,7 +10,6 @@ config_file = configure_file(
 
 sources = files(
     'Application.vala',
-    'SessionManager.vala',
     'Backends/PowerMode.vala',
     'Utils/Battery.vala',
     'Utils/CPUFreq.vala'

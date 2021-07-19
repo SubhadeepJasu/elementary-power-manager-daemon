@@ -1,6 +1,6 @@
 project('io.elementary.power-manager-daemon',
     'c', 'vala',
-    version: '0.0.1',
+    version: '0.0.2',
     license: 'GPL3',
 )
 
@@ -18,7 +18,6 @@ datadir = join_paths(prefix, get_option('datadir'))
 symlink = join_paths(meson.current_source_dir (), 'meson', 'create-symlink.sh')
 
 subdir('data')
-# subdir('po')
 subdir('src')
 
 meson.add_install_script('meson/post_install.py')

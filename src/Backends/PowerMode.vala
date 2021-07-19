@@ -16,12 +16,8 @@
 * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA 02110-1301 USA
 *
+* Authored by: Subhadeep Jasu <subhajasu@gmail.com>
 */
-
-//  [DBus (name = "org.freedesktop.systemd1.Manager")]
-//  public interface SystemdManager : Object {
-//      public abstract async void set_power_mode (int power_mode) throws GLib.Error;
-//  }
 
 public class PowerManagerDaemon.Backends.PowerMode : Object {
     private GLib.Settings power_mode_settings;
@@ -139,7 +135,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             
             if (battery_status != -1 && battery_level != -1) {
                 switch (battery_status) {
-                    case 0:
+                    case 0: // Discharging
                     if (battery_level >= 80) {
                         set_power_saving_mode.begin (true, true);
                     } else if (battery_level >= 50) {
@@ -148,7 +144,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                         set_power_saving_mode.begin (false, false);
                     }
                     break;
-                    case 1:
+                    case 1: // Charging
                     if (battery_level >= 50) {
                         set_performance_mode.begin ();
                     } else if (battery_level >= 20) {
@@ -157,7 +153,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                         set_power_saving_mode.begin (false, true);
                     }
                     break;
-                    case 2:
+                    case 2: // Full
                     set_performance_mode.begin ();
                     break;
                 }

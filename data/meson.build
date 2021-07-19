@@ -1,9 +1,3 @@
-# install_data(
-#     'autostart.desktop',
-#     install_dir: join_paths(get_option('sysconfdir'), 'xdg', 'autostart'),
-#     rename: meson.project_name() + '.desktop'
-# )
-
 install_data(
     'io.elementary.power-manager-daemon.service',
     install_dir: '/etc/systemd/system'
