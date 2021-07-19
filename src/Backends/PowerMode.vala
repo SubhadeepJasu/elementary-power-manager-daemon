@@ -154,7 +154,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
                     } else if (battery_level >= 20) {
                         set_power_saving_mode.begin (true, true);
                     } else {
-                        set_power_saving_mode.begin (false, false);
+                        set_power_saving_mode.begin (false, true);
                     }
                     break;
                     case 2:
