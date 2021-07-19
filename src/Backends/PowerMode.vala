@@ -101,7 +101,7 @@ public class PowerManagerDaemon.Backends.PowerMode : Object {
             debug ("Suggesting Turbo: OFF");
             Utils.CPUFreq.set_turbo (false);
         } else {
-            debug ("Power Saving mode turned: ON");
+            debug ("Power Saving mode: ON");
             Utils.CPUFreq.set_cpu_governor (available_cpu_governors[2], core_count);
             debug ("Suggesting Turbo: OFF");
             Utils.CPUFreq.set_turbo (false);

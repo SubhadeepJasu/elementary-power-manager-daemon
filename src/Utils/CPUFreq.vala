@@ -119,15 +119,19 @@ public class PowerManagerDaemon.Utils.CPUFreq {
         FileStream turbo_descriptor = null;
 
         if (GLib.FileUtils.test(INTEL_P_STATE, GLib.FileTest.EXISTS)) {
-            turbo_descriptor = FileStream.open (INTEL_P_STATE, "r+");
+            turbo_descriptor = FileStream.open (INTEL_P_STATE, "w");
         } else if (GLib.FileUtils.test(CPUFREQ_BOOST, GLib.FileTest.EXISTS)) {
-            turbo_descriptor = FileStream.open (CPUFREQ_BOOST, "r+");
+            turbo_descriptor = FileStream.open (CPUFREQ_BOOST, "w");
         } else {
             debug ("CPU Turbo not available");
         }
         
         if (turbo_descriptor != null) {
-            turbo_descriptor.puts (turbo_on ? "1\n" : "0\n");
+            if (turbo_descriptor.error () != 0) {
+                warning ("Cannot suggest CPU Turbo!");
+            } else {
+                turbo_descriptor.puts (turbo_on ? "1\n" : "0\n");
+            }
         }
     }
 }
